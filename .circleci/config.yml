@@ -65,7 +65,7 @@ docker_push: &docker_push
     command: |
       docker login -u $DOCKER_USER -p $DOCKER_PASS
       docker push \
-        nerveshub-gp/$APP_NAME:$DOCKER_TAG
+        jaclarkgp/nerveshub-gp:$APP_NAME-$DOCKER_TAG
 
 docker_release: &docker_release
   run:
@@ -73,9 +73,9 @@ docker_release: &docker_release
     command: |
       docker login -u $DOCKER_USER -p $DOCKER_PASS
       docker push \
-        nerveshub-gp/$APP_NAME:$DOCKER_VERSION_TAG
-      docker push \
-        nerveshub-gp/$APP_NAME:latest
+        jaclarkgp/nerveshub-gp:$APP_NAME-$DOCKER_VERSION_TAG
+#      docker push \
+#        jaclarkgp/nerveshub-gp:latest
 
 version: 2.1
 orbs:
