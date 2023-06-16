@@ -112,7 +112,7 @@ defmodule NervesHubWebCore.Firmwares do
 
     sha256sum =
       File.stream!(filepath, [], 2048)
-      |> Enum.reduce(:crypto.hash_init(:sha256), fn (chunk, acc) ->
+      |> Enum.reduce(:crypto.hash_init(:sha256), fn chunk, acc ->
         :crypto.hash_update(acc, chunk)
       end)
       |> :crypto.hash_final()
