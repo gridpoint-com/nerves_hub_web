@@ -110,6 +110,16 @@ defmodule NervesHubWebCore.Firmwares do
   def create_firmware(org, filepath, params \\ %{}, opts \\ []) do
     upload_file_2 = opts[:upload_file_2] || (&@uploader.upload_file/2)
 
+    sha256sum =
+      File.stream!(filepath, [], 2048)
+      |> Enum.reduce(:crypto.hash_init(:sha256), fn (chunk, acc) ->
+        :crypto.hash_update(acc, chunk)
+      end)
+      |> :crypto.hash_final()
+      |> Base.encode16()
+
+    Logger.debug("filepath: #{inspect(filepath)} sha256sum: #{inspect(sha256sum)}")
+
     Repo.transaction(
       fn ->
         with {:ok, params} <- build_firmware_params(org, filepath, params),
@@ -159,11 +169,14 @@ defmodule NervesHubWebCore.Firmwares do
   def verify_signature(filepath, keys) when is_binary(filepath) do
     keys
     |> Enum.find(fn %{key: key} ->
+      Logger.debug("Attempting to verify #{inspect(filepath)} w/ key #{inspect(key)}")
+
       case System.cmd("fwup", ["--verify", "--public-key", key, "-i", filepath]) do
         {_, 0} ->
           true
 
-        _ ->
+        error ->
+          Logger.error("Validation failed #{inspect(error)}")
           false
       end
     end)
@@ -428,6 +441,8 @@ defmodule NervesHubWebCore.Firmwares do
   @spec build_firmware_params(Org.t(), Path.t(), map()) :: {:ok, map()} | {:error, any()}
   defp build_firmware_params(%{id: org_id} = org, filepath, params) do
     org = NervesHubWebCore.Repo.preload(org, :org_keys)
+
+    Logger.debug("keys: #{inspect(org.org_keys)}")
 
     with {:ok, %{id: org_key_id}} <- verify_signature(filepath, org.org_keys),
          {:ok, metadata} <- metadata_from_fwup(filepath) do
