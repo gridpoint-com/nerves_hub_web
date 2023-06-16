@@ -1,8 +1,6 @@
 import Config
 
-logger_level = System.get_env("LOG_LEVEL", "warn") |> String.to_atom()
-
-config :logger, level: logger_level
+config :logger, level: :debug
 
 host = System.fetch_env!("HOST")
 port = 80

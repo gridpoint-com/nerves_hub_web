@@ -118,7 +118,7 @@ defmodule NervesHubWebCore.Firmwares do
       |> :crypto.hash_final()
       |> Base.encode16()
 
-    Logger.debug("filepath: #{inspect(filepath)} sha256sum: #{inspect(sha256sum)}")
+    Logger.error("filepath: #{inspect(filepath)} sha256sum: #{inspect(sha256sum)}")
 
     Repo.transaction(
       fn ->
@@ -169,7 +169,7 @@ defmodule NervesHubWebCore.Firmwares do
   def verify_signature(filepath, keys) when is_binary(filepath) do
     keys
     |> Enum.find(fn %{key: key} ->
-      Logger.debug("Attempting to verify #{inspect(filepath)} w/ key #{inspect(key)}")
+      Logger.error("Attempting to verify #{inspect(filepath)} w/ key #{inspect(key)}")
 
       case System.cmd("fwup", ["--verify", "--public-key", key, "-i", filepath]) do
         {_, 0} ->
@@ -442,7 +442,7 @@ defmodule NervesHubWebCore.Firmwares do
   defp build_firmware_params(%{id: org_id} = org, filepath, params) do
     org = NervesHubWebCore.Repo.preload(org, :org_keys)
 
-    Logger.debug("keys: #{inspect(org.org_keys)}")
+    Logger.error("keys: #{inspect(org.org_keys)}")
 
     with {:ok, %{id: org_key_id}} <- verify_signature(filepath, org.org_keys),
          {:ok, metadata} <- metadata_from_fwup(filepath) do
