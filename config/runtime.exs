@@ -370,7 +370,6 @@ if config_env() == :prod do
         customize_hostname_check: [
           match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
         ]
-      ],
       ] ++ tls_opts,
       retries: 1
   end
