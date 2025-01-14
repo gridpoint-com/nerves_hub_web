@@ -346,6 +346,12 @@ if config_env() == :prod do
   config :swoosh, local: false
 
   if System.get_env("SMTP_SERVER") do
+    tls_versions =
+      if System.get_env("AWS_SES") == "true" do
+        [versions: [:"tlsv1.2"]]
+      else
+        []
+      end
     config :nerves_hub, NervesHub.SwooshMailer,
       adapter: Swoosh.Adapters.SMTP,
       relay: System.fetch_env!("SMTP_SERVER"),
@@ -364,6 +370,7 @@ if config_env() == :prod do
           match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
         ]
       ],
+      ] ++ tls_versions,
       retries: 1
   end
 end
