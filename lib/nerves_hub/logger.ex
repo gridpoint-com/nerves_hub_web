@@ -30,6 +30,7 @@ defmodule NervesHub.Logger do
         [:phoenix, :endpoint, :stop],
         [:nerves_hub, :devices, :invalid_auth],
         [:nerves_hub, :devices, :no_auth],
+        [:nerves_hub, :devices, :tls_handshake_error],
         [:nerves_hub, :devices, :connect],
         [:nerves_hub, :devices, :connecting_code_failure],
         [:nerves_hub, :devices, :disconnect],
@@ -96,6 +97,14 @@ defmodule NervesHub.Logger do
       peer_data_present: metadata[:peer_data_present],
       ssl_cert_present: metadata[:ssl_cert_present],
       x_headers_present: metadata[:x_headers_present]
+    )
+  end
+
+  def log_event([:nerves_hub, :devices, :tls_handshake_error], _, metadata, _) do
+    Logger.info("Device TLS handshake failed",
+      event: "nerves_hub.devices.tls_handshake_error",
+      reason: metadata[:reason],
+      peer_ip: metadata[:peer_ip]
     )
   end
 
