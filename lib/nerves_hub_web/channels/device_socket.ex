@@ -183,7 +183,43 @@ defmodule NervesHubWeb.DeviceSocket do
       {:error, :invalid_auth}
   end
 
-  def connect(_params, _socket, _connect_info) do
+  # No usable client certificate or shared-secret headers were present in the
+  # connect_info at WebSocket-upgrade time.
+  #
+  # This is normally benign noise (health checks, scanners, browsers hitting the
+  # public endpoint). BUT it also silently captures a real failure mode: a device
+  # that DID present a client certificate during the TLS handshake (so the transport
+  # `verify_fun` ran and the device certificate `last_used` was bumped) whose cert
+  # did not survive into `connect_info.peer_data.ssl_cert` at upgrade time (e.g. TLS
+  # session resumption / abbreviated handshake). Those devices land here and, prior
+  # to this instrumentation, produced ZERO server-side logs while showing "cert used,
+  # never connects" in the UI.
+  #
+  # Emit telemetry describing what connect_info actually contained so the two cases
+  # can be told apart in logs. See sc-225223.
+  def connect(_params, _socket, connect_info) do
+    peer_data = Map.get(connect_info, :peer_data)
+    x_headers = Map.get(connect_info, :x_headers)
+
+    reason =
+      cond do
+        # peer_data present but no usable ssl_cert => cert was NOT surfaced to the
+        # socket layer despite (likely) being presented at TLS. This is the bug case.
+        is_map(peer_data) and is_nil(Map.get(peer_data, :ssl_cert)) ->
+          :peer_cert_missing_at_upgrade
+
+        # nothing device-like at all => ordinary no-credentials noise
+        true ->
+          :no_credentials
+      end
+
+    :telemetry.execute([:nerves_hub, :devices, :no_auth], %{count: 1}, %{
+      reason: reason,
+      peer_data_present: not is_nil(peer_data),
+      ssl_cert_present: is_map(peer_data) and not is_nil(Map.get(peer_data, :ssl_cert)),
+      x_headers_present: is_list(x_headers) and x_headers != []
+    })
+
     {:error, :no_auth}
   end
 

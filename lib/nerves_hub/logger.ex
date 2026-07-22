@@ -29,6 +29,7 @@ defmodule NervesHub.Logger do
       [
         [:phoenix, :endpoint, :stop],
         [:nerves_hub, :devices, :invalid_auth],
+        [:nerves_hub, :devices, :no_auth],
         [:nerves_hub, :devices, :connect],
         [:nerves_hub, :devices, :connecting_code_failure],
         [:nerves_hub, :devices, :disconnect],
@@ -86,6 +87,16 @@ defmodule NervesHub.Logger do
       |> Map.reject(fn {_key, val} -> is_nil(val) end)
 
     Logger.info("Device auth failed", extra)
+  end
+
+  def log_event([:nerves_hub, :devices, :no_auth], _, metadata, _) do
+    Logger.info("Device connect with no usable auth",
+      event: "nerves_hub.devices.no_auth",
+      reason: to_string(metadata[:reason]),
+      peer_data_present: metadata[:peer_data_present],
+      ssl_cert_present: metadata[:ssl_cert_present],
+      x_headers_present: metadata[:x_headers_present]
+    )
   end
 
   def log_event([:nerves_hub, :devices, :connect], _, metadata, _) do
