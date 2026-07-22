@@ -213,8 +213,15 @@ defmodule NervesHubWeb.DeviceSocket do
           :no_credentials
       end
 
+    peer_ip =
+      case peer_data do
+        %{address: addr} when is_tuple(addr) -> addr |> :inet.ntoa() |> List.to_string()
+        _ -> nil
+      end
+
     :telemetry.execute([:nerves_hub, :devices, :no_auth], %{count: 1}, %{
       reason: reason,
+      peer_ip: peer_ip,
       peer_data_present: not is_nil(peer_data),
       ssl_cert_present: is_map(peer_data) and not is_nil(Map.get(peer_data, :ssl_cert)),
       x_headers_present: is_list(x_headers) and x_headers != []

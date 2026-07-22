@@ -94,6 +94,7 @@ defmodule NervesHub.Logger do
     Logger.info("Device connect with no usable auth",
       event: "nerves_hub.devices.no_auth",
       reason: to_string(metadata[:reason]),
+      peer_ip: metadata[:peer_ip],
       peer_data_present: metadata[:peer_data_present],
       ssl_cert_present: metadata[:ssl_cert_present],
       x_headers_present: metadata[:x_headers_present]
