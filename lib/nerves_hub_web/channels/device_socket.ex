@@ -216,6 +216,7 @@ defmodule NervesHubWeb.DeviceSocket do
     peer_ip =
       case peer_data do
         %{address: addr} when is_tuple(addr) -> addr |> :inet.ntoa() |> List.to_string()
+        %{address: addr} -> inspect(addr)
         _ -> nil
       end
 
